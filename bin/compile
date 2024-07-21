@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
+
 # Usage: bin/compile <build-dir> <cache-dir> <env-dir>
+
 # See: https://devcenter.heroku.com/articles/buildpack-api
 
 set -eo pipefail
@@ -207,6 +209,9 @@ if [[ "$(realpath "${BUILD_DIR}")" != "$(realpath /app)" ]]; then
     ln -nsf "$BUILD_DIR/.heroku/vendor" /app/.heroku/vendor
     # Note: .heroku/src is copied in later.
 fi
+# Install Rust
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+export PATH="/root/.cargo/bin:$PATH"
 
 # Download / Install Python, from pre-build binaries available on Amazon S3.
 # This step also bootstraps pip / setuptools.
@@ -255,16 +260,42 @@ if [[ "$(realpath "${BUILD_DIR}")" != "$(realpath /app)" ]]; then
   deep-cp /app/.heroku/src "$BUILD_DIR/.heroku/src"
 fi
 
-
 # Django collectstatic support.
 # The buildpack automatically runs collectstatic for Django applications.
 # This is the cause for the majority of build failures on the Python platform.
-# These failures are intentional — if collectstatic (which can be tricky, at times) fails,
+# These failures are intentional — if collectstatic (which can be tricky, at times) fails,
 # your build fails.
 collectstatic_start_time=$(nowms)
 sub_env "${BUILDPACK_DIR}/bin/steps/collectstatic"
 meta_time "django_collectstatic_duration" "${collectstatic_start_time}"
 
+# Install Rust extension
+# Check if rust_extensions directory exists in the project root
+RUST_EXTENSIONS_DIR="$(pwd)/rust_extensions"
+if [ -d "$RUST_EXTENSIONS_DIR" ]; then
+    echo "rust_extensions directory found at $RUST_EXTENSIONS_DIR"
+    cp -r "$RUST_EXTENSIONS_DIR" "$BUILD_DIR"
+else
+    echo "rust_extensions directory not found"
+    exit 1
+fi
+
+# Build the Rust extension
+cd "$BUILD_DIR/rust_extensions"
+
+# Set up pipenv environment
+export PIPENV_VENV_IN_PROJECT=1
+pipenv --python $(which python)
+
+# Build the Rust extension using maturin
+pipenv run maturin build --release --out dist
+
+# Create a directory for the built extension
+mkdir -p "$BUILD_DIR/rust_extensions_dist"
+cp "dist/rust_extensions-*.whl" "$BUILD_DIR/rust_extensions_dist/"
+
+# Install the Rust extension using pip
+pip install "rust_extensions" --find-links "$BUILD_DIR/rust_extensions_dist/" --no-index
 
 # Programmatically create .profile.d script for application runtime environment variables.
 
