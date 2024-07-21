@@ -271,14 +271,14 @@ meta_time "django_collectstatic_duration" "${collectstatic_start_time}"
 
 # Install Rust extension
 # Check if rust_extensions directory exists in the project root
-RUST_EXTENSIONS_DIR="$(pwd)/rust_extensions"
-if [ -d "$RUST_EXTENSIONS_DIR" ]; then
-    echo "rust_extensions directory found at $RUST_EXTENSIONS_DIR"
-    cp -r "$RUST_EXTENSIONS_DIR" "$BUILD_DIR"
-else
-    echo "rust_extensions directory not found"
-    exit 1
-fi
+# RUST_EXTENSIONS_DIR="$(pwd)/rust_extensions"
+# if [ -d "$RUST_EXTENSIONS_DIR" ]; then
+#     echo "rust_extensions directory found at $RUST_EXTENSIONS_DIR"
+#     cp -r "$RUST_EXTENSIONS_DIR" "$BUILD_DIR"
+# else
+#     echo "rust_extensions directory not found"
+#     exit 1
+# fi
 
 # Build the Rust extension
 cd "$BUILD_DIR/rust_extensions"
