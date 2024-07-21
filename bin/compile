@@ -301,6 +301,7 @@ cp "$WHEEL_FILE" "$BUILD_DIR/rust_extensions_dist/"
 # Install the Rust extension using pip
 pip install "rust_extensions" --find-links "$BUILD_DIR/rust_extensions_dist/" --no-index
 
+cd "$BUILD_DIR"
 
 # Programmatically create .profile.d script for application runtime environment variables.
 # Set the PATH to include Python / pip / pipenv / etc.
