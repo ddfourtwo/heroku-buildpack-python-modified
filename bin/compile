@@ -270,6 +270,7 @@ collectstatic_start_time=$(nowms)
 sub_env "${BUILDPACK_DIR}/bin/steps/collectstatic"
 meta_time "django_collectstatic_duration" "${collectstatic_start_time}"
 
+
 # Build the Rust extension
 cd "$BUILD_DIR/rust_extensions"
 
@@ -283,12 +284,23 @@ export PATH="$HOME/.cargo/bin:$PATH"
 # Build the Rust extension using maturin
 pipenv run maturin build --release --out dist
 
+# List the contents of the dist directory
+echo "Contents of dist directory:"
+ls -l dist
+
+# Get the filename of the built wheel
+WHEEL_FILE=$(ls dist/*.whl)
+echo "Built wheel file: $WHEEL_FILE"
+
 # Create a directory for the built extension
 mkdir -p "$BUILD_DIR/rust_extensions_dist"
-cp "dist/rust_extensions-*.whl" "$BUILD_DIR/rust_extensions_dist/"
+
+# Copy the built wheel file to the rust_extensions_dist directory
+cp "$WHEEL_FILE" "$BUILD_DIR/rust_extensions_dist/"
 
 # Install the Rust extension using pip
 pip install "rust_extensions" --find-links "$BUILD_DIR/rust_extensions_dist/" --no-index
+
 
 # Programmatically create .profile.d script for application runtime environment variables.
 # Set the PATH to include Python / pip / pipenv / etc.
