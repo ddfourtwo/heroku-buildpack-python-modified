@@ -261,15 +261,6 @@ if [[ "$(realpath "${BUILD_DIR}")" != "$(realpath /app)" ]]; then
   deep-cp /app/.heroku/src "$BUILD_DIR/.heroku/src"
 fi
 
-# Django collectstatic support.
-# The buildpack automatically runs collectstatic for Django applications.
-# This is the cause for the majority of build failures on the Python platform.
-# These failures are intentional — if collectstatic (which can be tricky, at times) fails,
-# your build fails.
-collectstatic_start_time=$(nowms)
-sub_env "${BUILDPACK_DIR}/bin/steps/collectstatic"
-meta_time "django_collectstatic_duration" "${collectstatic_start_time}"
-
 
 # Build the Rust extension
 cd "$BUILD_DIR/rust_extensions"
@@ -302,6 +293,17 @@ cp "$WHEEL_FILE" "$BUILD_DIR/rust_extensions_dist/"
 pip install "rust_extensions" --find-links "$BUILD_DIR/rust_extensions_dist/" --no-index
 
 cd "$BUILD_DIR"
+
+
+# Django collectstatic support.
+# The buildpack automatically runs collectstatic for Django applications.
+# This is the cause for the majority of build failures on the Python platform.
+# These failures are intentional — if collectstatic (which can be tricky, at times) fails,
+# your build fails.
+collectstatic_start_time=$(nowms)
+sub_env "${BUILDPACK_DIR}/bin/steps/collectstatic"
+meta_time "django_collectstatic_duration" "${collectstatic_start_time}"
+
 
 # Programmatically create .profile.d script for application runtime environment variables.
 # Set the PATH to include Python / pip / pipenv / etc.
