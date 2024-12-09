@@ -290,7 +290,7 @@ mkdir -p "$BUILD_DIR/rust_extensions_dist"
 cp "$WHEEL_FILE" "$BUILD_DIR/rust_extensions_dist/"
 
 # Install the Rust extension using pip
-pip install "rust_extensions" --find-links "$BUILD_DIR/rust_extensions_dist/" --no-index
+pip install "rust_extensions" --find-links "$BUILD_DIR/rust_extensions_dist/" --no-index --force-reinstall
 
 cd "$BUILD_DIR"
 
